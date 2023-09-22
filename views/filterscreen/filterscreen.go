@@ -38,6 +38,7 @@ type model struct {
 	width    int
 	filter   *Filter
 	stations []goradios.Station
+	term     bubbles.textinput
 }
 
 func NewModel(filter *Filter, width int, height int) *model {
