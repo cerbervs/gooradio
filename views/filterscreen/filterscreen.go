@@ -1,7 +1,10 @@
 package filterscreen
 
 import (
+	"strconv"
+
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"gitlab.com/AgentNemo/goradios"
 )
 
@@ -17,8 +20,8 @@ type Filter struct {
 	HideBroken bool
 }
 
-func NewFilter(term string) (Filter, error) {
-	return Filter{
+func NewFilter(term string) (*Filter, error) {
+	return &Filter{
 			By:         goradios.StationsByName,
 			Term:       term,
 			Order:      goradios.OrderName,
@@ -33,13 +36,15 @@ func NewFilter(term string) (Filter, error) {
 type model struct {
 	height   int
 	width    int
-	filter   Filter
+	filter   *Filter
 	stations []goradios.Station
 }
 
-func NewModel(filter Filter) *model {
+func NewModel(filter *Filter, width int, height int) *model {
 	return &model{
 		filter: filter,
+		width:  width,
+		height: height,
 	}
 }
 
@@ -75,5 +80,40 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // View renders the program's UI, which is just a string. The view is
 // rendered after every Update.
 func (m *model) View() string {
-	panic("not implemented") // TODO: Implement
+	if m.width == 0 || m.height == 0 {
+		return lipgloss.Place(
+			m.width,
+			m.height,
+			lipgloss.Center,
+			lipgloss.Center,
+			lipgloss.JoinVertical(
+				lipgloss.Center,
+				"Loading...",
+			),
+		)
+	}
+
+	view := lipgloss.JoinVertical(
+		lipgloss.Center,
+		"Term: "+m.filter.Term,
+		"Reverse: "+lipgloss.NewStyle().
+			Foreground(lipgloss.Color("205")).
+			Render(strconv.FormatBool(m.filter.Reverse)),
+		"Offset: "+lipgloss.NewStyle().
+			Foreground(lipgloss.Color("205")).
+			Render(strconv.Itoa(int(m.filter.Offset))),
+		"Limit: "+lipgloss.NewStyle().
+			Foreground(lipgloss.Color("205")).
+			Render(strconv.Itoa(int(m.filter.Limit))),
+		"HideBroken: "+lipgloss.NewStyle().
+			Foreground(lipgloss.Color("205")).
+			Render(strconv.FormatBool(m.filter.HideBroken)),
+	)
+	return lipgloss.Place(
+		m.width,
+		m.height,
+		lipgloss.Center,
+		lipgloss.Center,
+		view,
+	)
 }
