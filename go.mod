@@ -4,8 +4,8 @@ go 1.21.1
 
 require (
 	github.com/charmbracelet/bubbles v0.16.1
-	github.com/charmbracelet/bubbletea v0.24.1
-	github.com/charmbracelet/lipgloss v0.7.1
+	github.com/charmbracelet/bubbletea v0.24.2
+	github.com/charmbracelet/lipgloss v0.8.0
 	gitlab.com/AgentNemo/goradios v0.0.0-20210218201446-d20f1eeff610
 )
 
