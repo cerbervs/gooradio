@@ -1,11 +1,11 @@
 package startscreen
 
 import (
+	"gooradio/views/filterscreen"
+
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-
-	"gooradio/views/filterscreen"
 )
 
 type model struct {
@@ -62,7 +62,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width, m.height = msg.Width, msg.Height
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c", "q":
+		case "ctrl+c":
 			return m, tea.Quit
 		case "enter":
 			m.searchterm = m.terminput.Value()
