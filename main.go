@@ -2,12 +2,11 @@ package main
 
 import (
 	"fmt"
+	"gooradio/views/startscreen"
 	"log"
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
-
-	"gooradio/views/startscreen"
 )
 
 func main() {
