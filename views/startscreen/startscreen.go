@@ -4,6 +4,8 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+
+	"gooradio/views/filterscreen"
 )
 
 type model struct {
@@ -65,7 +67,12 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			m.searchterm = m.terminput.Value()
 			m.terminput.SetValue("")
-			return m, nil
+			if filter, err := filterscreen.NewFilter(m.searchterm); err != nil {
+				return m, nil
+			} else {
+				filterScreen := filterscreen.NewModel(filter, m.width, m.height)
+				return filterScreen, nil
+			}
 		}
 	}
 
