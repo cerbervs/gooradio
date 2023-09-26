@@ -151,7 +151,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width, m.height = msg.Width, msg.Height
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c":
+		case "ctrl+c", "esc":
 			return m, tea.Quit
 		case "enter":
 			m.filter.Term = m.input.Value()
