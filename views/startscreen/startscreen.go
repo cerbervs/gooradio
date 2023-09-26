@@ -1,10 +1,10 @@
 package startscreen
 
 import (
-	"gooradio/views/filterscreen"
-
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+
+	"gooradio/views/filterscreen"
 )
 
 type model struct {
@@ -22,13 +22,12 @@ func (m *model) Init() tea.Cmd {
 }
 
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	// TODO: Implement
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width, m.height = msg.Width, msg.Height
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c":
+		case "ctrl+c", "esc":
 			return m, tea.Quit
 		case "enter":
 			return filterscreen.NewModel(m.width, m.height), nil
