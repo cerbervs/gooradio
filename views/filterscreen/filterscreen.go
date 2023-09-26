@@ -1,7 +1,7 @@
 package filterscreen
 
 import (
-	"strconv"
+	"fmt"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -117,6 +117,7 @@ func NewFilterForm() FilterForm {
 // Init is the first function that will be called. It returns an optional
 // initial command. To not perform an initial command return nil.
 func (m *model) Init() tea.Cmd {
+	m.filterForm = NewFilterForm()
 	return nil
 }
 
@@ -189,22 +190,26 @@ func (m *model) View() string {
 		)
 	}
 
+	options := func() string {
+		var options string
+		for _, option := range m.filterForm.Options {
+			options = lipgloss.JoinHorizontal(
+				lipgloss.Left,
+				option.Title,
+				lipgloss.JoinHorizontal(
+					lipgloss.Left,
+					option.Options[option.OptionIdx],
+				),
+			)
+		}
+		return options
+	}()
+
+	fmt.Println(options)
+
 	view := lipgloss.JoinVertical(
 		lipgloss.Center,
 		m.styles.InputField.Render(m.input.View()),
-		"Term: "+m.filter.Term,
-		"Reverse: "+lipgloss.NewStyle().
-			Foreground(lipgloss.Color("205")).
-			Render(strconv.FormatBool(m.filter.Reverse)),
-		"Offset: "+lipgloss.NewStyle().
-			Foreground(lipgloss.Color("205")).
-			Render(strconv.Itoa(int(m.filter.Offset))),
-		"Limit: "+lipgloss.NewStyle().
-			Foreground(lipgloss.Color("205")).
-			Render(strconv.Itoa(int(m.filter.Limit))),
-		"HideBroken: "+lipgloss.NewStyle().
-			Foreground(lipgloss.Color("205")).
-			Render(strconv.FormatBool(m.filter.HideBroken)),
 	)
 	return lipgloss.Place(
 		m.width,
