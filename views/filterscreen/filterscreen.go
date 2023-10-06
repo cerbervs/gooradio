@@ -120,7 +120,7 @@ func (m *model) Init() tea.Cmd {
 	return nil
 }
 
-func (m *model) Next() tea.Cmd {
+func (m *model) MoveSelection(next bool, prev bool) tea.Cmd {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
@@ -130,12 +130,24 @@ func (m *model) Next() tea.Cmd {
 			if m.filterForm.Options[m.inputIdx].OptionIdx < len(
 				m.filterForm.Options[m.inputIdx].Options,
 			)-1 {
-				m.filterForm.Options[m.inputIdx].OptionIdx++
+				if next {
+					m.filterForm.Options[m.inputIdx].OptionIdx++
+				} else if prev {
+					m.filterForm.Options[m.inputIdx].OptionIdx--
+				}
 			} else {
-				m.inputIdx++
+				if next {
+					m.inputIdx++
+				} else if prev {
+					m.inputIdx--
+				}
 			}
 		} else {
-			m.inputIdx++
+			if next {
+				m.inputIdx++
+			} else if prev {
+				m.inputIdx--
+			}
 		}
 	} else {
 		cmd = m.input.Focus()
@@ -171,7 +183,9 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 		case "tab":
-			m.Next()
+			m.MoveSelection(true, false)
+		case "shift+tab":
+			m.MoveSelection(false, true)
 		}
 	}
 
