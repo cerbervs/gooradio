@@ -88,15 +88,14 @@ func NewFilterForm() FilterForm {
 }
 
 type model struct {
-	height        int
-	width         int
-	filter        *Filter
-	stations      []goradios.Station
-	input         textinput.Model
-	styles        Styles
-	inputResponse string
-	inputIdx      int
-	filterForm    FilterForm
+	height     int
+	width      int
+	filter     *Filter
+	stations   []goradios.Station
+	input      textinput.Model
+	styles     Styles
+	inputIdx   int
+	filterForm FilterForm
 }
 
 func NewModel(width int, height int) *model {
@@ -132,6 +131,8 @@ func (m *model) Next() tea.Cmd {
 				m.filterForm.Options[m.inputIdx].Options,
 			)-1 {
 				m.filterForm.Options[m.inputIdx].OptionIdx++
+			} else {
+				m.inputIdx++
 			}
 		} else {
 			m.inputIdx++
@@ -159,15 +160,15 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "esc":
 			return m, tea.Quit
 		case "enter":
-			if len(m.filterForm.Options[m.inputIdx].Options) > 0 {
-				m.filterForm.Options[m.inputIdx].Response = m.filterForm.Options[m.inputIdx].OptionIdx
-			} else {
-				m.filterForm.Options[m.inputIdx].Response = 1
-			}
-
 			if m.input.Focused() {
 				m.filter.Term = m.input.Value()
 				m.input.SetValue("")
+			} else {
+				if len(m.filterForm.Options[m.inputIdx].Options) > 0 {
+					m.filterForm.Options[m.inputIdx].Response = m.filterForm.Options[m.inputIdx].OptionIdx
+				} else {
+					m.filterForm.Options[m.inputIdx].Response = 1
+				}
 			}
 		case "tab":
 			m.Next()
@@ -211,7 +212,7 @@ func (m *model) View() string {
 						subopts = option.Title
 						for j, subopt := range option.Options {
 							if j == option.OptionIdx {
-								selected = ">"
+								selected = " >"
 							} else {
 								selected = " "
 							}
