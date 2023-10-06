@@ -51,38 +51,11 @@ func NewFilter(term string) (*Filter, error) {
 		nil
 }
 
-type model struct {
-	height        int
-	width         int
-	filter        *Filter
-	stations      []goradios.Station
-	input         textinput.Model
-	styles        Styles
-	inputResponse string
-	inputIdx      int
-	filterForm    FilterForm
-}
-
-func NewModel(width int, height int) *model {
-	ti := textinput.New()
-	ti.CharLimit = 80
-	ti.Placeholder = "Type here"
-	ti.Focus()
-
-	return &model{
-		filter: new(Filter),
-		width:  width,
-		height: height,
-		styles: *NewStyles(),
-		input:  ti,
-	}
-}
-
 type FilterOption struct {
 	Title     string
 	Options   []string
 	OptionIdx int
-	Response  interface{}
+	Response  int
 }
 
 type FilterForm struct {
@@ -114,6 +87,33 @@ func NewFilterForm() FilterForm {
 	}
 }
 
+type model struct {
+	height        int
+	width         int
+	filter        *Filter
+	stations      []goradios.Station
+	input         textinput.Model
+	styles        Styles
+	inputResponse string
+	inputIdx      int
+	filterForm    FilterForm
+}
+
+func NewModel(width int, height int) *model {
+	ti := textinput.New()
+	ti.CharLimit = 80
+	ti.Placeholder = "Type here"
+
+	return &model{
+		filter:     new(Filter),
+		width:      width,
+		height:     height,
+		styles:     *NewStyles(),
+		input:      ti,
+		filterForm: NewFilterForm(),
+	}
+}
+
 // Init is the first function that will be called. It returns an optional
 // initial command. To not perform an initial command return nil.
 func (m *model) Init() tea.Cmd {
@@ -128,7 +128,11 @@ func (m *model) Next() tea.Cmd {
 	)
 	if m.inputIdx < len(m.filterForm.Options)-1 {
 		if len(m.filterForm.Options[m.inputIdx].Options) > 0 {
-			m.filterForm.Options[m.inputIdx].OptionIdx++
+			if m.filterForm.Options[m.inputIdx].OptionIdx < len(
+				m.filterForm.Options[m.inputIdx].Options,
+			)-1 {
+				m.filterForm.Options[m.inputIdx].OptionIdx++
+			}
 		} else {
 			m.inputIdx++
 		}
@@ -155,17 +159,18 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "esc":
 			return m, tea.Quit
 		case "enter":
-			m.filter.Term = m.input.Value()
-			m.inputResponse = m.input.Value()
-			m.input.SetValue("")
-		case "tab":
-			m.Next()
-		case "space":
 			if len(m.filterForm.Options[m.inputIdx].Options) > 0 {
 				m.filterForm.Options[m.inputIdx].Response = m.filterForm.Options[m.inputIdx].OptionIdx
 			} else {
-				m.filterForm.Options[m.inputIdx].Response = true
+				m.filterForm.Options[m.inputIdx].Response = 1
 			}
+
+			if m.input.Focused() {
+				m.filter.Term = m.input.Value()
+				m.input.SetValue("")
+			}
+		case "tab":
+			m.Next()
 		}
 	}
 
@@ -192,23 +197,62 @@ func (m *model) View() string {
 
 	options := func() string {
 		var options string
-		for _, option := range m.filterForm.Options {
-			options = lipgloss.JoinHorizontal(
-				lipgloss.Left,
-				option.Title,
-				lipgloss.JoinHorizontal(
-					lipgloss.Left,
-					option.Options[option.OptionIdx],
-				),
+		for i, option := range m.filterForm.Options {
+			options = lipgloss.JoinVertical(
+				lipgloss.Top,
+				options,
+				func() string {
+					var (
+						response string
+						selected string
+					)
+					if len(option.Options) > 0 {
+						var subopts string
+						subopts = option.Title
+						for j, subopt := range option.Options {
+							if j == option.OptionIdx {
+								selected = ">"
+							} else {
+								selected = " "
+							}
+
+							if j == option.Response {
+								response = "x"
+							} else {
+								response = " "
+							}
+
+							subopts = lipgloss.JoinHorizontal(
+								lipgloss.Right,
+								subopts,
+								fmt.Sprintf("%s [%s] %v", selected, response, subopt),
+							)
+						}
+						return subopts
+					}
+
+					if i == m.inputIdx {
+						selected = ">"
+					} else {
+						selected = " "
+					}
+
+					if option.Response == 1 {
+						response = "x"
+					} else {
+						response = " "
+					}
+
+					return fmt.Sprintf("%s [%s] %s", selected, response, option.Title)
+				}(),
 			)
 		}
 		return options
 	}()
 
-	fmt.Println(options)
-
 	view := lipgloss.JoinVertical(
 		lipgloss.Center,
+		options,
 		m.styles.InputField.Render(m.input.View()),
 	)
 	return lipgloss.Place(
