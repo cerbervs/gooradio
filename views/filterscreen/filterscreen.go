@@ -32,9 +32,9 @@ type Filter struct {
 	By         goradios.StationsBy
 	Term       string
 	Order      goradios.Order
-	Reverse    bool
 	Offset     uint
 	Limit      uint
+	Reverse    bool
 	HideBroken bool
 }
 
@@ -88,14 +88,14 @@ func NewFilterForm() FilterForm {
 }
 
 type model struct {
+	input      textinput.Model
+	filter     *Filter
+	styles     Styles
+	stations   []goradios.Station
+	filterForm FilterForm
 	height     int
 	width      int
-	filter     *Filter
-	stations   []goradios.Station
-	input      textinput.Model
-	styles     Styles
 	inputIdx   int
-	filterForm FilterForm
 }
 
 func NewModel(width int, height int) *model {
@@ -126,31 +126,46 @@ func (m *model) MoveSelection(next bool, prev bool) tea.Cmd {
 		cmds []tea.Cmd
 	)
 	if m.inputIdx < len(m.filterForm.Options)-1 {
-		if len(m.filterForm.Options[m.inputIdx].Options) > 0 {
+		m.input.Blur()
+		if next {
 			if m.filterForm.Options[m.inputIdx].OptionIdx < len(
 				m.filterForm.Options[m.inputIdx].Options,
 			)-1 {
-				if next {
-					m.filterForm.Options[m.inputIdx].OptionIdx++
-				} else if prev {
-					m.filterForm.Options[m.inputIdx].OptionIdx--
-				}
-			} else {
-				if next {
-					m.inputIdx++
-				} else if prev {
-					m.inputIdx--
-				}
+				m.filterForm.Options[m.inputIdx].OptionIdx++
+				return tea.Batch(cmds...)
+			}
+
+			if m.inputIdx < len(m.filterForm.Options)-1 {
+				m.inputIdx++
 			}
 		} else {
-			if next {
-				m.inputIdx++
-			} else if prev {
+			if m.inputIdx == 0 {
+				m.inputIdx = len(m.filterForm.Options)
+				cmd = m.input.Focus()
+				cmds = append(cmds, cmd)
+				return tea.Batch(cmds...)
+			}
+
+			if m.filterForm.Options[m.inputIdx].OptionIdx > 0 {
+				m.filterForm.Options[m.inputIdx].OptionIdx--
+				return tea.Batch(cmds...)
+			}
+
+			if m.inputIdx > 0 {
 				m.inputIdx--
 			}
 		}
 	} else {
-		cmd = m.input.Focus()
+		if next {
+			cmd = m.input.Focus()
+			m.inputIdx = 0
+			for i := range m.filterForm.Options {
+				m.filterForm.Options[i].OptionIdx = 0
+			}
+		} else {
+			m.input.Blur()
+			m.inputIdx--
+		}
 		cmds = append(cmds, cmd)
 	}
 
